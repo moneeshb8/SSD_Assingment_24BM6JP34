@@ -94,7 +94,7 @@ ggplot(swiss_data, aes(x = Education, y = Fertility)) +
 # 7. Multiple Regression
 # --------------------------------------------------------------------------------
 cat("\n### 7. Multiple Regression ###\n")
-model <- lm(Fertility ~ Education + Examination + Agriculture + Catholic, data = swiss_data)
+model <- lm(Fertility ~ Education + Agriculture + Catholic + Infant.Mortality, data = swiss_data)
 print(summary(model))
 
 # --------------------------------------------------------------------------------
