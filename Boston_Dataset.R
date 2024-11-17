@@ -154,4 +154,4 @@ arrows(0, 0, pca$rotation[, 1] * max(pca$x[, 1]), pca$rotation[, 2] * max(pca$x[
 text(pca$rotation[, 1] * max(pca$x[, 1]) * 1.1, pca$rotation[, 2] * max(pca$x[, 2]) * 1.1, 
      labels = rownames(pca$rotation), col = "red", cex = 1.2)
 
-# end
+## end
