@@ -62,6 +62,14 @@ for (column in numeric_columns) {
 }
 par(mfrow = c(1, 1))  # Reset layout after plotting
 
+# Create a bar plot for the 'Education' variable
+ggplot(swiss, aes(x = factor(Education))) +
+  geom_bar(fill = "skyblue", color = "black") +
+  labs(title = "Bar Plot of Education Levels", 
+       x = "Education Level", 
+       y = "Count") +
+  theme_minimal()
+
 # --------------------------------------------------------------------------------
 # 4. Scatter Plot Matrix
 # --------------------------------------------------------------------------------
@@ -128,6 +136,35 @@ print(explained_variance)
 
 screeplot(pca, type = "lines", main = "Scree Plot")
 
+# Perform PCA
+pca <- prcomp(swiss_data, scale. = TRUE)
+
+# Extract eigenvalues (variances) and cumulative variance
+eigenvalues <- pca$sdev^2
+explained_variance <- eigenvalues / sum(eigenvalues) * 100
+cumulative_variance <- cumsum(explained_variance)
+
+# Adjust margins to fit the legend at the top
+par(mar = c(5, 4, 4, 4) + 0.1)
+
+# Plot cumulative variance as bars
+bar_positions <- barplot(cumulative_variance, col = "skyblue", border = NA, ylim = c(0, 100), 
+                         names.arg = 1:length(cumulative_variance), xlab = "Principal Component", 
+                         ylab = "Cumulative Variance (%)", main = "Scree Plot and Cumulative Variance")
+
+# Overlay the scree plot (eigenvalues)
+par(new = TRUE)
+plot(1:length(eigenvalues), eigenvalues, type = "b", pch = 16, col = "orange", lwd = 2, 
+     axes = FALSE, xlab = "", ylab = "", ylim = c(0, max(eigenvalues)))
+axis(4, at = seq(0, round(max(eigenvalues), 1), by = round(max(eigenvalues) / 5, 1)), 
+     col = "orange", col.axis = "orange", las = 2)
+mtext("Eigenvalues", side = 4, line = 3, col = "orange")
+
+# Add legend outside the plot at the top
+legend("top", inset = c(0, -0.15), legend = c("Eigenvalues (Line)", "Cumulative Variance (Bar)"), 
+       col = c("orange", "skyblue"), pch = c(16, NA), lty = c(1, NA), fill = c(NA, "skyblue"), 
+       bty = "n", horiz = TRUE)
+
 # --------------------------------------------------------------------------------
 # 10. PCA Interpretation
 # --------------------------------------------------------------------------------
@@ -135,8 +172,14 @@ cat("\n### 10. PCA Interpretation ###\n")
 plot(pca$x[, 1], pca$x[, 2], 
      xlab = "PC1", ylab = "PC2", 
      main = "PCA Biplot of the Swiss Dataset", 
-     cex.lab = 1.5, cex.axis = 1.2, pch = 16, col = "green")
+     cex.lab = 1.5, cex.axis = 1.2, pch = 16, col = "green",
+     xlim = c(-4, max(pca$x[, 1])))  # Set PC1 axis to start from -4)
 arrows(0, 0, pca$rotation[, 1] * max(pca$x[, 1]), pca$rotation[, 2] * max(pca$x[, 2]), 
        col = "red", length = 0.1)
 text(pca$rotation[, 1] * max(pca$x[, 1]) * 1.1, pca$rotation[, 2] * max(pca$x[, 2]) * 1.1, 
      labels = colnames(swiss_data), col = "red", cex = 1.2)
+
+cat("\n### PCA Loadings ###\n")
+loadings <- pca$rotation  # Extract the PCA loadings
+loadings_table <- as.data.frame(loadings)  # Convert to a data frame for better readability
+print(loadings_table[0:2])  # Print the table

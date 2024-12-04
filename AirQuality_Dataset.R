@@ -14,6 +14,9 @@ lapply(required_packages, library, character.only = TRUE)
 data("airquality")  # Load the AirQuality dataset
 air <- na.omit(airquality)  # Remove rows with NA values
 
+# Convert 'Month' to a factor for categorical representation
+air$Month <- factor(air$Month, labels = c("May", "June", "July", "August", "September"))
+
 # --------------------------------------------------------------------------------
 # 1. Data Overview
 # --------------------------------------------------------------------------------
@@ -62,6 +65,11 @@ for (column in numeric_columns) {
 }
 par(mfrow = c(1, 1))  # Reset layout after plotting
 
+# Create the bar plot
+ggplot(air, aes(x = Month)) +
+  geom_bar(fill = "skyblue", color = "black") +
+  labs(title = "Bar Plot of Observations by Month", x = "Month", y = "Frequency") +
+  theme_minimal()
 # --------------------------------------------------------------------------------
 # 4. Scatter Plot Matrix
 # --------------------------------------------------------------------------------
@@ -127,15 +135,57 @@ cat("Proportion of Variance Explained by Each Principal Component:\n")
 print(explained_variance)
 screeplot(pca, type = "lines", main = "Scree Plot")
 
+# Extract eigenvalues and explained variance
+eigenvalues <- pca$sdev^2
+explained_variance <- eigenvalues / sum(eigenvalues) * 100
+cumulative_variance <- cumsum(explained_variance)
+
+# Set layout for two plots: scatter plot matrix and scree plot
+layout(matrix(c(1, 2), nrow = 1), widths = c(2, 1))  # Two plots side by side
+
+# Plot the scatter plot matrix
+library(lattice)
+splom(air[, numeric_columns], col = 'skyblue', main = "Scatter Plot Matrix for Numeric Features")
+
+# Plot the scree plot with cumulative variance bars
+par(mar = c(5, 4, 4, 4) + 0.1)  # Adjust margins
+bar_positions <- barplot(cumulative_variance, col = "skyblue", border = NA, ylim = c(0, 100), 
+                         names.arg = 1:length(cumulative_variance), xlab = "Principal Component", 
+                         ylab = "Cumulative Variance (%)", main = "Scree Plot with Cumulative Variance")
+par(new = TRUE)
+plot(1:length(eigenvalues), eigenvalues, type = "b", pch = 16, col = "orange", lwd = 2, 
+     axes = FALSE, xlab = "", ylab = "", ylim = c(0, max(eigenvalues)))
+axis(4, at = seq(0, round(max(eigenvalues), 1), by = round(max(eigenvalues) / 5, 1)), 
+     col = "orange", col.axis = "orange", las = 2)
+mtext("Eigenvalues", side = 4, line = 3, col = "orange")
+legend("top", inset = c(0, -0.15), legend = c("Eigenvalues (Line)", "Cumulative Variance (Bar)"), 
+       col = c("orange", "skyblue"), pch = c(16, NA), lty = c(1, NA), fill = c(NA, "skyblue"), 
+       bty = "n", horiz = TRUE)
+
+# Reset layout
+graphics::layout(1)
 # --------------------------------------------------------------------------------
 # 10. PCA Interpretation
 # --------------------------------------------------------------------------------
 cat("\n### 10. PCA Interpretation ###\n")
+
+# Adjust the y-axis limits to include 3
 plot(pca$x[, 1], pca$x[, 2], 
      xlab = "PC1", ylab = "PC2", 
      main = "PCA Biplot of the AirQuality Dataset", 
-     cex.lab = 1.5, cex.axis = 1.2, pch = 16, col = "green")
+     cex.lab = 1.5, cex.axis = 1.2, pch = 16, col = "green",
+     ylim = c(min(pca$x[, 2]), 2.5))  # Adjust y-axis limits
+
+# Add arrows for loadings
 arrows(0, 0, pca$rotation[, 1] * max(pca$x[, 1]), pca$rotation[, 2] * max(pca$x[, 2]), 
        col = "red", length = 0.1)
+
+# Add labels for loadings
 text(pca$rotation[, 1] * max(pca$x[, 1]) * 1.1, pca$rotation[, 2] * max(pca$x[, 2]) * 1.1, 
      labels = colnames(air[, numeric_columns]), col = "red", cex = 1.2)
+
+# Print the loadings of PC1 and PC2
+cat("\n### Loadings of the First Two Principal Components ###\n")
+loadings <- as.data.frame(pca$rotation[, 1:2])  # Extract the first two components
+colnames(loadings) <- c("PC1", "PC2")  # Rename columns for clarity
+print(loadings)
